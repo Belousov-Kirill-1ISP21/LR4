@@ -1,6 +1,7 @@
 <?php
 class Application {
     private $conn;
+    private $table_name = "applications";
     
     public $id;
     public $user_id;
@@ -14,37 +15,49 @@ class Application {
     }
     
     public function create() {
-        $sql = "INSERT INTO applications (user_id, course_id, start_date, payment_method) 
-                VALUES ($this->user_id, $this->course_id, '$this->start_date', '$this->payment_method')";
+        $query = "INSERT INTO " . $this->table_name . " 
+                  (user_id, course_id, start_date, payment_method) 
+                  VALUES (?, ?, ?, ?)";
         
-        return mysqli_query($this->conn, $sql);
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "iiss", 
+            $this->user_id, $this->course_id, $this->start_date, $this->payment_method);
+        
+        return mysqli_stmt_execute($stmt);
     }
     
     public function getUserApplications($user_id) {
-        $sql = "SELECT a.*, c.name as course_name, c.price, t.full_name as teacher_name
-                FROM applications a 
-                JOIN courses c ON a.course_id = c.id 
-                LEFT JOIN teachers t ON c.teacher_id = t.id
-                WHERE a.user_id = $user_id 
-                ORDER BY a.created_at DESC";
+        $query = "SELECT a.*, c.name as course_name, c.price, t.full_name as teacher_name
+                  FROM " . $this->table_name . " a 
+                  JOIN courses c ON a.course_id = c.id 
+                  LEFT JOIN teachers t ON c.teacher_id = t.id
+                  WHERE a.user_id = ? 
+                  ORDER BY a.created_at DESC";
         
-        return mysqli_query($this->conn, $sql);
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        
+        return mysqli_stmt_get_result($stmt);
     }
     
     public function getAllApplications() {
-        $sql = "SELECT a.*, u.full_name, u.login, c.name as course_name, t.full_name as teacher_name
-                FROM applications a 
-                JOIN users u ON a.user_id = u.id 
-                JOIN courses c ON a.course_id = c.id
-                LEFT JOIN teachers t ON c.teacher_id = t.id
-                ORDER BY a.created_at DESC";
+        $query = "SELECT a.*, u.full_name, u.login, c.name as course_name, t.full_name as teacher_name
+                  FROM " . $this->table_name . " a 
+                  JOIN users u ON a.user_id = u.id 
+                  JOIN courses c ON a.course_id = c.id
+                  LEFT JOIN teachers t ON c.teacher_id = t.id
+                  ORDER BY a.created_at DESC";
         
-        return mysqli_query($this->conn, $sql);
+        $result = mysqli_query($this->conn, $query);
+        return $result;
     }
     
     public function updateStatus() {
-        $sql = "UPDATE applications SET status = '$this->status' WHERE id = $this->id";
-        return mysqli_query($this->conn, $sql);
+        $query = "UPDATE " . $this->table_name . " SET status = ? WHERE id = ?";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "si", $this->status, $this->id);
+        return mysqli_stmt_execute($stmt);
     }
 }
 ?>

@@ -1,6 +1,7 @@
 <?php
 class Review {
     private $conn;
+    private $table_name = "reviews";
     
     public $id;
     public $user_id;
@@ -12,10 +13,14 @@ class Review {
     }
     
     public function create() {
-        $sql = "INSERT INTO reviews (user_id, rating, comment) 
-                VALUES ($this->user_id, $this->rating, '$this->comment')";
+        $query = "INSERT INTO " . $this->table_name . " 
+                  (user_id, rating, comment) 
+                  VALUES (?, ?, ?)";
         
-        return mysqli_query($this->conn, $sql);
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "iis", $this->user_id, $this->rating, $this->comment);
+        
+        return mysqli_stmt_execute($stmt);
     }
 }
 ?>

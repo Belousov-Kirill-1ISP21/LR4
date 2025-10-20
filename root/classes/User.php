@@ -1,6 +1,7 @@
 <?php
 class User {
     private $conn;
+    private $table_name = "users";
     
     public $id;
     public $login;
@@ -15,15 +16,24 @@ class User {
     }
     
     public function register() {
-        $sql = "INSERT INTO users (login, password, full_name, phone, email, status_id) 
-                VALUES ('$this->login', '$this->password', '$this->full_name', '$this->phone', '$this->email', $this->status_id)";
+        $query = "INSERT INTO " . $this->table_name . " 
+                  (login, password, full_name, phone, email, status_id) 
+                  VALUES (?, ?, ?, ?, ?, ?)";
         
-        return mysqli_query($this->conn, $sql);
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "sssssi", 
+            $this->login, $this->password, $this->full_name, 
+            $this->phone, $this->email, $this->status_id);
+        
+        return mysqli_stmt_execute($stmt);
     }
     
     public function login() {
-        $sql = "SELECT id, password, status_id FROM users WHERE login = '$this->login'";
-        $result = mysqli_query($this->conn, $sql);
+        $query = "SELECT id, password, status_id FROM " . $this->table_name . " WHERE login = ?";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "s", $this->login);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         
         if(mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
@@ -37,8 +47,11 @@ class User {
     }
     
     public function checkLoginExists() {
-        $sql = "SELECT id FROM users WHERE login = '$this->login'";
-        $result = mysqli_query($this->conn, $sql);
+        $query = "SELECT id FROM " . $this->table_name . " WHERE login = ?";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "s", $this->login);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         return mysqli_num_rows($result) > 0;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 class Course {
     private $conn;
+    private $table_name = "courses";
     
     public $id;
     public $name;
@@ -14,11 +15,12 @@ class Course {
     }
     
     public function getAll() {
-        $sql = "SELECT c.*, t.full_name
-                FROM courses c 
-                LEFT JOIN teachers t ON c.teacher_id = t.id";
+        $query = "SELECT c.*, t.full_name
+                  FROM " . $this->table_name . " c 
+                  LEFT JOIN teachers t ON c.teacher_id = t.id";
         
-        return mysqli_query($this->conn, $sql);
+        $result = mysqli_query($this->conn, $query);
+        return $result;
     }
 }
 ?>
