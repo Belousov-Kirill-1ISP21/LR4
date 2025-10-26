@@ -10,7 +10,7 @@ if ($_POST) {
     
     if ($user->login()) {
         $_SESSION['user_id'] = $user->id;
-        $_SESSION['admin'] = ($user->status_id == 0);
+        $_SESSION['admin'] = ($user->role_id == 0);
         header("Location: ../index.php");
         exit;
     } else {

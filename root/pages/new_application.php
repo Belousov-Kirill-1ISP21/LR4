@@ -18,6 +18,7 @@ if ($_POST) {
     $application->course_id = $_POST['course_id'];
     $application->start_date = $_POST['start_date'];
     $application->payment_method = $_POST['payment_method'];
+    $application->status_id = 1; 
     
     if ($application->create()) {
         $success = "Заявка отправлена!";
@@ -60,6 +61,7 @@ if ($_POST) {
         </form>
         
         <p><a href="my_applications.php">Мои заявки</a></p>
+        <p><a href="courses.php">Все курсы</a></p>
         <p><a href="../index.php">На главную</a></p>
     </div>
 </body>

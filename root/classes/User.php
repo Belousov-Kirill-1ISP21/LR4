@@ -9,7 +9,8 @@ class User {
     public $full_name;
     public $phone;
     public $email;
-    public $status_id;
+    public $role_id;
+    public $error;
     
     public function __construct($db) {
         $this->conn = $db;
@@ -17,19 +18,25 @@ class User {
     
     public function register() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  (login, password, full_name, phone, email, status_id) 
+                  (login, password, full_name, phone, email, role_id) 
                   VALUES (?, ?, ?, ?, ?, ?)";
         
         $stmt = mysqli_prepare($this->conn, $query);
         mysqli_stmt_bind_param($stmt, "sssssi", 
             $this->login, $this->password, $this->full_name, 
-            $this->phone, $this->email, $this->status_id);
+            $this->phone, $this->email, $this->role_id);
         
-        return mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_execute($stmt);
+        
+        if (!$result) {
+            $this->error = mysqli_error($this->conn);
+        }
+        
+        return $result;
     }
     
     public function login() {
-        $query = "SELECT id, password, status_id FROM " . $this->table_name . " WHERE login = ?";
+        $query = "SELECT id, password, role_id FROM " . $this->table_name . " WHERE login = ?";
         $stmt = mysqli_prepare($this->conn, $query);
         mysqli_stmt_bind_param($stmt, "s", $this->login);
         mysqli_stmt_execute($stmt);
@@ -39,20 +46,11 @@ class User {
             $row = mysqli_fetch_assoc($result);
             if($this->password === $row['password']) {
                 $this->id = $row['id'];
-                $this->status_id = $row['status_id'];
+                $this->role_id = $row['role_id'];
                 return true;
             }
         }
         return false;
-    }
-    
-    public function checkLoginExists() {
-        $query = "SELECT id FROM " . $this->table_name . " WHERE login = ?";
-        $stmt = mysqli_prepare($this->conn, $query);
-        mysqli_stmt_bind_param($stmt, "s", $this->login);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        return mysqli_num_rows($result) > 0;
     }
 }
 ?>

@@ -10,15 +10,21 @@ if ($_POST) {
     $user->full_name = $_POST['full_name'];
     $user->phone = $_POST['phone'];
     $user->email = $_POST['email'];
-    $user->status_id = 1;
+    $user->role_id = 1;
     
-    if ($user->checkLoginExists()) {
-        $error = "Логин уже занят";
+    if ($user->register()) {
+        $success = "Регистрация успешна!";
     } else {
-        if ($user->register()) {
-            $success = "Регистрация успешна!";
+        $error_message = $user->error;
+        
+        if (strpos($error_message, 'login') !== false) {
+            $error = "Логин уже занят";
+        } elseif (strpos($error_message, 'email') !== false) {
+            $error = "Email уже занят";
+        } elseif (strpos($error_message, 'phone') !== false) {
+            $error = "Телефон уже занят";
         } else {
-            $error = "Ошибка регистрации";
+            $error = "Ошибка регистрации: " . $error_message;
         }
     }
 }

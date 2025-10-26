@@ -2,6 +2,7 @@
 include '../config.php';
 include '../classes/Application.php';
 include '../classes/Review.php';
+include '../classes/Course.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['admin']) {
     header("Location: ../index.php");
@@ -10,9 +11,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['admin']) {
 
 $application = new Application($db);
 $review = new Review($db);
+$course = new Course($db);
 
 if ($_POST && isset($_POST['rating'])) {
     $review->user_id = $_SESSION['user_id'];
+    $review->course_id = $_POST['course_id'];
     $review->rating = $_POST['rating'];
     $review->comment = $_POST['comment'];
     
@@ -24,6 +27,7 @@ if ($_POST && isset($_POST['rating'])) {
 }
 
 $applications = $application->getUserApplications($_SESSION['user_id']);
+$courses = $course->getAll();
 ?>
 <!DOCTYPE html>
 <html>
@@ -57,16 +61,7 @@ $applications = $application->getUserApplications($_SESSION['user_id']);
                     <td><?php echo $row['teacher_name']; ?></td>
                     <td><?php echo $row['price']; ?> руб.</td>
                     <td><?php echo $row['start_date']; ?></td>
-                    <td>
-                        <?php 
-                        $statuses = [
-                            'new' => 'Новая', 
-                            'in_progress' => 'Идет обучение', 
-                            'completed' => 'Завершено'
-                        ];
-                        echo $statuses[$row['status']];
-                        ?>
-                    </td>
+                    <td><?php echo $row['status_name']; ?></td>
                 </tr>
                 <?php endwhile; ?>
             </table>
@@ -74,8 +69,17 @@ $applications = $application->getUserApplications($_SESSION['user_id']);
             <p>У вас нет заявок</p>
         <?php endif; ?>
         
-        <h3>Оставить отзыв о наших услугах</h3>
+        <h3>Оставить отзыв о курсе</h3>
         <form method="POST">
+            <select name="course_id" required>
+                <option value="">Выберите курс</option>
+                <?php
+                mysqli_data_seek($courses, 0);
+                while($course_row = mysqli_fetch_assoc($courses)) {
+                    echo "<option value='{$course_row['id']}'>{$course_row['name']}</option>";
+                }
+                ?>
+            </select><br><br>
             <select name="rating" required>
                 <option value="5">5 - Отлично</option>
                 <option value="4">4 - Хорошо</option>
@@ -83,11 +87,12 @@ $applications = $application->getUserApplications($_SESSION['user_id']);
                 <option value="2">2 - Плохо</option>
                 <option value="1">1 - Ужасно</option>
             </select><br><br>
-            <textarea name="comment" placeholder="Ваш отзыв о наших услугах" rows="4" cols="50"></textarea><br><br>
+            <textarea name="comment" placeholder="Ваш отзыв о курсе" rows="4" cols="50"></textarea><br><br>
             <button type="submit">Отправить отзыв</button>
         </form>
         
         <p><a href="new_application.php">Оставить новую заявку</a></p>
+        <p><a href="courses.php">Все курсы</a></p>
         <p><a href="../index.php">На главную</a></p>
     </div>
 </body>
