@@ -38,5 +38,18 @@ class Review {
         
         return mysqli_stmt_get_result($stmt);
     }
+    
+    public function getCourseRating($course_id) {
+        $query = "SELECT AVG(rating) as avg_rating, COUNT(*) as review_count 
+                  FROM " . $this->table_name . " 
+                  WHERE course_id = ?";
+        
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_bind_param($stmt, "i", $course_id);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        return mysqli_fetch_assoc($result);
+    }
 }
 ?>

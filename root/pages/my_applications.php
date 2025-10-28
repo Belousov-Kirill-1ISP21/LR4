@@ -2,7 +2,6 @@
 include '../config.php';
 include '../classes/Application.php';
 include '../classes/Review.php';
-include '../classes/Course.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['admin']) {
     header("Location: ../index.php");
@@ -11,7 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['admin']) {
 
 $application = new Application($db);
 $review = new Review($db);
-$course = new Course($db);
 
 if ($_POST && isset($_POST['rating'])) {
     $review->user_id = $_SESSION['user_id'];
@@ -26,8 +24,8 @@ if ($_POST && isset($_POST['rating'])) {
     }
 }
 
+$show_review_form = isset($_GET['review']) ? $_GET['review'] : null;
 $applications = $application->getUserApplications($_SESSION['user_id']);
-$courses = $course->getAll();
 ?>
 <!DOCTYPE html>
 <html>
@@ -54,6 +52,7 @@ $courses = $course->getAll();
                     <th>Цена</th>
                     <th>Дата начала</th>
                     <th>Статус</th>
+                    <th>Отзыв</th>
                 </tr>
                 <?php while($row = mysqli_fetch_assoc($applications)): ?>
                 <tr>
@@ -62,34 +61,45 @@ $courses = $course->getAll();
                     <td><?php echo $row['price']; ?> руб.</td>
                     <td><?php echo $row['start_date']; ?></td>
                     <td><?php echo $row['status_name']; ?></td>
+                    <td>
+                        <?php if ($row['status_id'] == 3): ?>
+                            <a href="?review=<?php echo $row['course_id']; ?>#review-form">
+                                <button>Оставить отзыв</button>
+                            </a>
+                        <?php else: ?>
+                            Завершите курс, чтобы оставить отзыв.
+                        <?php endif; ?>
+                    </td>
                 </tr>
+                
+                <?php if ($show_review_form == $row['course_id'] && $row['status_id'] == 3): ?>
+                <tr>
+                    <td colspan="6">
+                        <div id="review-form" style="background: #f9f9f9; padding: 15px; margin: 10px 0;">
+                            <h4>Оставить отзыв о курсе "<?php echo $row['course_name']; ?>"</h4>
+                            <form method="POST">
+                                <input type="hidden" name="course_id" value="<?php echo $row['course_id']; ?>">
+                                <select name="rating" required>
+                                    <option value="5">5 - Отлично</option>
+                                    <option value="4">4 - Хорошо</option>
+                                    <option value="3">3 - Нормально</option>
+                                    <option value="2">2 - Плохо</option>
+                                    <option value="1">1 - Ужасно</option>
+                                </select><br><br>
+                                <textarea name="comment" placeholder="Ваш отзыв о курсе" rows="4" cols="50" required></textarea><br><br>
+                                <button type="submit">Отправить отзыв</button>
+                                <a href="my_applications.php"><button type="button">Отмена</button></a>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <?php endif; ?>
+                
                 <?php endwhile; ?>
             </table>
         <?php else: ?>
             <p>У вас нет заявок</p>
         <?php endif; ?>
-        
-        <h3>Оставить отзыв о курсе</h3>
-        <form method="POST">
-            <select name="course_id" required>
-                <option value="">Выберите курс</option>
-                <?php
-                mysqli_data_seek($courses, 0);
-                while($course_row = mysqli_fetch_assoc($courses)) {
-                    echo "<option value='{$course_row['id']}'>{$course_row['name']}</option>";
-                }
-                ?>
-            </select><br><br>
-            <select name="rating" required>
-                <option value="5">5 - Отлично</option>
-                <option value="4">4 - Хорошо</option>
-                <option value="3">3 - Нормально</option>
-                <option value="2">2 - Плохо</option>
-                <option value="1">1 - Ужасно</option>
-            </select><br><br>
-            <textarea name="comment" placeholder="Ваш отзыв о курсе" rows="4" cols="50"></textarea><br><br>
-            <button type="submit">Отправить отзыв</button>
-        </form>
         
         <p><a href="new_application.php">Оставить новую заявку</a></p>
         <p><a href="courses.php">Все курсы</a></p>

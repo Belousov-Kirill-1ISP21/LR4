@@ -20,7 +20,11 @@ $courses = $course->getAll();
     <div class="container">
         <h2>Все курсы</h2>
         
-        <?php while($course_row = mysqli_fetch_assoc($courses)): ?>
+        <?php while($course_row = mysqli_fetch_assoc($courses)): 
+            $rating_data = $review->getCourseRating($course_row['id']);
+            $avg_rating = $rating_data['avg_rating'] ? round($rating_data['avg_rating'], 1) : 0;
+            $review_count = $rating_data['review_count'];
+        ?>
         <div class="course-block">
             <h3><?php echo $course_row['name']; ?></h3>
             <p><strong>Преподаватель:</strong> <?php echo $course_row['teacher_name']; ?></p>
@@ -28,21 +32,33 @@ $courses = $course->getAll();
             <p><strong>Продолжительность:</strong> <?php echo $course_row['duration_hours']; ?> часов</p>
             <p><strong>Цена:</strong> <?php echo $course_row['price']; ?> руб.</p>
             
-            <h4>Отзывы о курсе:</h4>
-            <?php
-            $reviews = $review->getCourseReviews($course_row['id']);
-            if (mysqli_num_rows($reviews) > 0): ?>
-                <?php while($review_row = mysqli_fetch_assoc($reviews)): ?>
-                <div class="review-item">
-                    <p><strong><?php echo $review_row['full_name']; ?></strong> 
-                    (Оценка: <?php echo $review_row['rating']; ?>/5)</p>
-                    <p><?php echo $review_row['comment']; ?></p>
-                    <small><?php echo $review_row['created_at']; ?></small>
-                </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <p>Пока нет отзывов</p>
-            <?php endif; ?>
+            <div class="course-rating">
+                <strong>Рейтинг курса:</strong> 
+                <?php if ($avg_rating > 0): ?>
+                    <span class="rating-value"><?php echo $avg_rating; ?>/5</span>
+                    (<?php echo $review_count; ?> отзывов)
+                <?php else: ?>
+                    <span>ещё нет оценок</span>
+                <?php endif; ?>
+            </div>
+            
+            <div class="course-reviews">
+                <h4>Отзывы:</h4>
+                <?php
+                $reviews = $review->getCourseReviews($course_row['id']);
+                if (mysqli_num_rows($reviews) > 0): ?>
+                    <?php while($review_row = mysqli_fetch_assoc($reviews)): ?>
+                    <div class="review-item">
+                        <p><strong><?php echo $review_row['full_name']; ?></strong> 
+                        (Оценка: <?php echo $review_row['rating']; ?>/5)</p>
+                        <p><?php echo $review_row['comment']; ?></p>
+                        <small><?php echo $review_row['created_at']; ?></small>
+                    </div>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p>Пока нет отзывов</p>
+                <?php endif; ?>
+            </div>
         </div>
         <?php endwhile; ?>
         
